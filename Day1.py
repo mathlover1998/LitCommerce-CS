@@ -14,7 +14,7 @@ site_domain = 'https://testerguinea.myshopify.com'
 
 @app.route('/')
 def index():
-    return 'Noob'
+    return 'Noobbb'
 
 
 @app.route('/create-smart-collection', methods=['POST'])
