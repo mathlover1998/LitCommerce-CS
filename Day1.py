@@ -14,7 +14,7 @@ site_domain = 'https://testerguinea.myshopify.com'
 
 @app.route('/')
 def index():
-    return 'Noobbb'
+    return 'Hello'
 
 
 @app.route('/create-smart-collection', methods=['POST'])
@@ -48,10 +48,10 @@ def create_custom_collection():
     return response.json()
 
 
-@app.route('/create-product', methods=['POST'])
+@app.route('/create-product', methods=['GET', 'POST'])
 def create_product():
     endpoint = f'{site_domain}/admin/api/2023-01/products.json'
-    params = {"product": {"title": "Burton Custom Freestyle 151", "body_html": "<strong>Good snowboard!</strong>",
+    params = {"product": {"title": "Goods", "body_html": "<strong>Good snowboard!</strong>",
                           "vendor": "Burton", "product_type": "Snowboard"}}
     response = requests.post(url=endpoint, headers=header, json=params)
     return response.json()
@@ -84,55 +84,83 @@ def create_order():
     return response.json()
 
 
-@app.route('/update-product-price',methods = ['GET','PATCH'])
+@app.route('/update-product-price', methods=['GET', 'PATCH'])
 def update_product_price():
-    products_list = requests.get(url=f'{site_domain}/admin/api/2023-01/products.json',headers=header).json()['products']
-    product_1_id = products_list[-1]['id']
-    product_2_id = products_list[-2]['id']
-
-    products_list[-1]['variants'][0]['price'] = '100'
-    products_list[-2]['variants'][0]['price'] = '100'
-    requests.patch(url=f'{site_domain}/admin/api/2023-01/products/{product_1_id}.json',headers=header,data={'products':products_list})
-    requests.patch(url=f'{site_domain}/admin/api/2023-01/products/{product_2_id}.json',headers=header,data={'products':products_list})
-    return jsonify({'data':[products_list[-1],products_list[-2]]})
-
-
-@app.route('/update-product-image',methods = ['GET','PATCH'])
-def update_product_image():
-    products_list = requests.get(url=f'{site_domain}/admin/api/2023-01/products.json',headers=header).json()['products']
-    product_1_id = products_list[-1]['id']
-    product_2_id = products_list[-2]['id']
-    products_list[-1]['image'] = 'https://cdn.pixabay.com/photo/2015/04/23/22/00/tree-736885__480.jpg'
-    products_list[-2]['image'] = 'https://cdn.pixabay.com/photo/2015/04/23/22/00/tree-736885__480.jpg'
-
-    requests.patch(url=f'{site_domain}/admin/api/2023-01/products/{product_1_id}.json',headers=header,data={'products':products_list})
-    requests.patch(url=f'{site_domain}/admin/api/2023-01/products/{product_2_id}.json',headers=header,data={'products':products_list})
-    print(products_list[-1])
-    return jsonify({'data':[products_list[-1],products_list[-2]]})
-
-
-@app.route('/update-product-quantity',methods = ['GET','PATCH'])
-def update_product_quantity():
-    products_list = requests.get(url=f'{site_domain}/admin/api/2023-01/products.json',headers=header).json()['products']
-    product_1_id = products_list[-1]['id']
-    product_2_id = products_list[-2]['id']
-
-    products_list[-1]['variants'][0]['inventory_quantity'] = 50
-    products_list[-2]['variants'][0]['inventory_quantity'] = 50
-    requests.patch(url=f'{site_domain}/admin/api/2023-01/products/{product_1_id}.json',headers=header,data={'products':products_list})
-    requests.patch(url=f'{site_domain}/admin/api/2023-01/products/{product_2_id}.json',headers=header,data={'products':products_list})
-
-    return jsonify({'data':[products_list[-1],products_list[-2]]})
-
-
-@app.route('/delete-product',methods = ['DELETE'])
-def delete_product():
-    products_list = requests.get(url=f'{site_domain}/admin/api/2023-01/products.json',headers=header).json()['products']
+    products_list = requests.get(
+        url=f'{site_domain}/admin/api/2023-01/products.json', headers=header).json()['products']
+    
     product_id = products_list[0]['id']
-    response = requests.delete(url=f'{site_domain}/admin/api/2023-01/products/{product_id}.json',headers=header)
-    return response.json()
+
+    products_list[0]['variants'][0]['price'] = '200'
+    
+    requests.patch(
+        url=f'{site_domain}/admin/api/2023-01/products/{productid}.json', headers=header)
+    
+    return jsonify({'data':products_list[0]})
+
+
+@app.route('/update-product-image', methods=['GET', 'PUT', 'POST'])
+def update_product_image():
+    products_list = requests.get(
+        url=f'{site_domain}/admin/api/2023-01/products.json', headers=header).json()['products']
+    product_id = products_list[0]['id']
     
     
+    images_list = requests.get(
+        f'{site_domain}/admin/api/2023-04/products/{product_id}/images.json', headers=header).json()
+    image_id = images_list['images'][0]['id']
+    
+    payload = {
+    "product": {
+        "id": product_id,
+        "images": [
+            {
+                "src": "https://i.gifer.com/origin/c3/c320e774393ce5869b6b348b546c23d0_w200.gif"
+            }
+        ]
+    }
+}
+
+    response = requests.put(f"{site_domain}/admin/api/2023-04/products/{product_id}.json", headers=header, json=payload)
+
+    if response.status_code == 200:
+        return response.json()
+    else:
+        return jsonify({'error': 'Noob'})
+
+    
+
+    
+    
+
+
+    
+
+
+@app.route('/update-product-quantity', methods=['GET', 'POST'])
+def update_product_quantity():
+    products_list = requests.get(
+        url=f'{site_domain}/admin/api/2023-04/products.json', headers=header).json()['products']
+    product_id = products_list[0]['id']
+    inventory_item_id = requests.get(f'{site_domain}/admin/api/2023-04/products/{product_id}/variants.json',
+                                     headers=header).json()['variants'][0]['inventory_item_id']
+    inventory_level = requests.get(f'{site_domain}/admin/api/2023-04/inventory_levels.json',
+                                   headers=header, params={'inventory_item_ids': inventory_item_id}).json()
+    location_id = inventory_level['inventory_levels'][0]['location_id']
+    params = {"location_id": f"{location_id}",
+              "inventory_item_id": f"{inventory_item_id}",
+              "available_adjustment": 10}
+    return requests.post(f'{site_domain}/admin/api/2023-04/inventory_levels/adjust.json', headers=header, json=params).json()
+
+
+@app.route('/delete-product', methods=['DELETE'])
+def delete_product():
+    products_list = requests.get(
+        url=f'{site_domain}/admin/api/2023-01/products.json', headers=header).json()['products']
+    product_id = products_list[0]['id']
+    requests.delete(
+        url=f'{site_domain}/admin/api/2023-01/products/{product_id}.json', headers=header)
+    return jsonify({'success': 'Delete successfully'})
 
 
 if __name__ == '__main__':
